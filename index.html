@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>9AMB IPPT SCORING DASHBOARD</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#07142f" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="menu">☰</div>
+      <div class="title">
+        <h1 id="headerTitle">9AMB IPPT SCORING DASHBOARD</h1>
+        <p>Overview, Results & Awards and Quick Search</p>
+      </div>
+      <button id="backBtn" class="navbtn">← Back</button>
+      <button id="homeBtn" class="navbtn">⌂ Home</button>
+    </div>
+
+    <main id="home" class="content">
+      <img id="homeLogo" class="home-logo" alt="9AMB logo" />
+
+      <section class="card-link" id="overviewCard">
+        <div class="circle bluebg">👥</div>
+        <div class="card-text">
+          <h2>OVERVIEW</h2>
+          <p>View total participants registered by depots</p>
+        </div>
+        <div class="arrow">›</div>
+      </section>
+
+      <section class="card-link" id="resultsCard">
+        <div class="circle greenbg">🏅</div>
+        <div class="card-text">
+          <h2>RESULTS & AWARDS</h2>
+          <p>View results and awards breakdown by depots</p>
+        </div>
+        <div class="arrow">›</div>
+      </section>
+
+      <section class="card-link" id="searchCard">
+        <div class="circle purplebg">🔍</div>
+        <div class="card-text">
+          <h2>QUICK SEARCH</h2>
+          <p>Search participants by NRIC or Tag Number</p>
+        </div>
+        <div class="arrow">›</div>
+      </section>
+    </main>
+
+    <main id="page" class="content page"></main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="navOverview"><span class="nav-icon">👥</span>Overview</button>
+      <button class="nav-item" id="navResults"><span class="nav-icon">🏆</span>Results & Awards</button>
+      <button class="nav-item" id="navSearch"><span class="nav-icon">🔍</span>Quick Search</button>
+    </nav>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js");
+      });
+    }
+  </script>
+</body>
+</html>
