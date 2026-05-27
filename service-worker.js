@@ -1,4 +1,4 @@
-const CACHE_NAME = "9amb-ippt-dashboard-v14-run-time-display-fix";
+const CACHE_NAME = "9amb-ippt-dashboard-v15-correct-column-mapping";
 
 const APP_FILES = [
   "./",
