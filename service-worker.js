@@ -1,4 +1,4 @@
-const CACHE_NAME = "9amb-ippt-dashboard-v12-timefix";
+const CACHE_NAME = "9amb-ippt-dashboard-v13-force-run-time-fix";
 
 const APP_FILES = [
   "./",
