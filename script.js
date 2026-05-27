@@ -342,10 +342,17 @@ function normalizeAward(value) {
 
 
 function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
-  const minutes = Number(String(minutesValue || "").trim());
-  const seconds = Number(String(secondsValue || "").trim());
+  const minutesRaw = String(minutesValue ?? "").trim();
+  const secondsRaw = String(secondsValue ?? "").trim();
+
+  const minutes = Number(minutesRaw);
+  const seconds = Number(secondsRaw);
 
   if (!Number.isNaN(minutes) && !Number.isNaN(seconds) && (minutes > 0 || seconds > 0)) {
+    // IPPT rounded timing is rounded UP to the next 10 seconds.
+    // Examples:
+    // 11 min 09 sec -> 11:10
+    // 11 min 53 sec -> 12:00
     const roundedSeconds = Math.ceil(seconds / 10) * 10;
 
     if (roundedSeconds >= 60) {
@@ -359,22 +366,19 @@ function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
 }
 
 function formatRunTime(value, minutesValue = "", secondsValue = "") {
-  const raw = String(value || "").trim();
-
-  const minutes = Number(String(minutesValue || "").trim());
-  const seconds = Number(String(secondsValue || "").trim());
-  const hasMinSec = !Number.isNaN(minutes) && !Number.isNaN(seconds) && (minutes > 0 || seconds > 0);
+  // Strongest rule: calculate directly from the actual IPPT Entry Min/Sec columns.
   const fromMinSec = formatRunTimeFromMinutesSeconds(minutesValue, secondsValue);
+  if (fromMinSec) return fromMinSec;
 
-  // Google Sheets may export a duration like 00:12 or 0:12.
-  // For IPPT this means 12 minutes 00 seconds, not 0 min 12 sec.
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
   const timeMatch = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (timeMatch) {
     const first = Number(timeMatch[1]);
     const second = Number(timeMatch[2]);
     const third = timeMatch[3] !== undefined ? Number(timeMatch[3]) : null;
 
-    // hh:mm:ss format
     if (third !== null) {
       const totalSeconds = (first * 3600) + (second * 60) + third;
       const displayMinutes = Math.floor(totalSeconds / 60);
@@ -382,59 +386,61 @@ function formatRunTime(value, minutesValue = "", secondsValue = "") {
       return `${displayMinutes}:${String(displaySeconds).padStart(2, "0")}`;
     }
 
-    // If exported as 0:12, interpret as 12:00 unless Min/Sec clearly gives a more precise same-minute timing.
-    if (first === 0) {
-      if (hasMinSec) {
-        // Example: Min 11 Sec 09 and exported 0:11 -> should be 11:10.
-        if (second === minutes && seconds > 0 && seconds < 50) {
-          return fromMinSec;
-        }
+    // Google CSV can export 00:12/0:12 for a 12-minute duration.
+    if (first === 0) return `${second}:00`;
 
-        // Example: Min 11 Sec 50 and exported 0:12 -> should be 12:00.
-        if (second === minutes + 1) {
-          return `${second}:00`;
-        }
-      }
-
-      return `${second}:00`;
-    }
-
-    // Already correct, e.g. 11:10.
     return `${first}:${String(second).padStart(2, "0")}`;
   }
 
-  // Google Sheets may export duration as a day fraction.
-  const numeric = Number(raw);
-  if (!Number.isNaN(numeric) && numeric > 0 && numeric < 1) {
-    const totalSeconds = Math.round(numeric * 24 * 60 * 60);
-    const displayMinutes = Math.floor(totalSeconds / 60);
-    const displaySeconds = totalSeconds % 60;
-
-    // If it resolves to a whole minute, show m:00.
-    if (displaySeconds === 0) {
-      return `${displayMinutes}:00`;
-    }
-
-    return `${displayMinutes}:${String(displaySeconds).padStart(2, "0")}`;
-  }
-
-  return fromMinSec || raw || "";
+  return raw;
 }
 
 function getCellByIndex(row, index) {
   return row[index] || "";
 }
 
+function getNumericAt(row, index) {
+  const value = String(row[index] ?? "").trim();
+  const number = Number(value);
+  return Number.isNaN(number) ? "" : value;
+}
+
+function getIpptRunMin(row, headers) {
+  // Header lookup first
+  const byHeader = getCell(row, headers, ["2.4km (Min)", "2.4km Min"]);
+  if (byHeader !== "") return byHeader;
+
+  // Published CSV fallback for IPPT Entry:
+  // Q = zero-based index 16
+  return getNumericAt(row, 16);
+}
+
+function getIpptRunSec(row, headers) {
+  const byHeader = getCell(row, headers, ["2.4km (Sec)", "2.4km Sec"]);
+  if (byHeader !== "") return byHeader;
+
+  // R = zero-based index 17
+  return getNumericAt(row, 17);
+}
+
+function getIpptRunRounded(row, headers) {
+  const byHeader = getCell(row, headers, ["2.4km (Rounded Timing)", "2.4km Rounded Time", "2.4km Rounded Timing"]);
+  if (byHeader !== "") return byHeader;
+
+  // S = zero-based index 18
+  return row[18] || "";
+}
+
 function getRunMinutes(row, headers) {
-  return getCell(row, headers, ["2.4km (Min)", "2.4km Min"]) || getCellByIndex(row, 17);
+  return getIpptRunMin(row, headers);
 }
 
 function getRunSeconds(row, headers) {
-  return getCell(row, headers, ["2.4km (Sec)", "2.4km Sec"]) || getCellByIndex(row, 18);
+  return getIpptRunSec(row, headers);
 }
 
 function getRunRounded(row, headers) {
-  return getCell(row, headers, ["2.4km (Rounded Timing)", "2.4km Rounded Time", "2.4km Rounded Timing"]) || getCellByIndex(row, 19);
+  return getIpptRunRounded(row, headers);
 }
 
 function buildParticipantsFromCsv(csvText) {
@@ -451,6 +457,7 @@ function buildParticipantsFromCsv(csvText) {
 
   const headers = rows[headerIndex].map(normalizeHeader);
   const participants = [];
+  const debugTiming = [];
 
   for (const row of rows.slice(headerIndex + 1)) {
     const tag = String(getCell(row, headers, ["Tag Number"])).trim();
@@ -461,6 +468,7 @@ function buildParticipantsFromCsv(csvText) {
     const rawScore = getCell(row, headers, ["Total Score"]);
     const score = Number(rawScore) || 0;
 
+    debugTiming.push({ tag, min: getRunMinutes(row, headers), sec: getRunSeconds(row, headers), rounded: getRunRounded(row, headers) });
     participants.push({
       tag: /^\\d+$/.test(tag) ? tag.padStart(3, "0") : tag,
       depot: String(getCell(row, headers, ["Depot"])).trim(),
@@ -479,6 +487,7 @@ function buildParticipantsFromCsv(csvText) {
     });
   }
 
+  console.log("IPPT timing debug", debugTiming.slice(0, 20));
   return participants;
 }
 
