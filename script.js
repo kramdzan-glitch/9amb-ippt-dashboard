@@ -347,11 +347,7 @@ function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
 
   if (!Number.isNaN(minutes) && !Number.isNaN(seconds) && (minutes > 0 || seconds > 0)) {
     const roundedSeconds = Math.round(seconds / 10) * 10;
-
-    if (roundedSeconds >= 60) {
-      return `${minutes + 1}:00`;
-    }
-
+    if (roundedSeconds >= 60) return `${minutes + 1}:00`;
     return `${minutes}:${String(roundedSeconds).padStart(2, "0")}`;
   }
 
@@ -359,20 +355,19 @@ function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
 }
 
 function formatRunTime(value, minutesValue = "", secondsValue = "") {
+  // For IPPT, the most reliable source is Min + Sec.
+  // This prevents Google Sheets CSV duration values like 00:11 from being mistaken as 0 min 11 sec.
   const fromMinSec = formatRunTimeFromMinutesSeconds(minutesValue, secondsValue);
-  const raw = String(value || "").trim();
+  if (fromMinSec) return fromMinSec;
 
-  if (!raw) return fromMinSec;
+  const raw = String(value || "").trim();
+  if (!raw) return "";
 
   const timeMatch = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (timeMatch) {
     const first = Number(timeMatch[1]);
     const second = Number(timeMatch[2]);
     const third = timeMatch[3] !== undefined ? Number(timeMatch[3]) : null;
-
-    if (first === 0 && fromMinSec && fromMinSec !== "0:00") {
-      return fromMinSec;
-    }
 
     if (third !== null) {
       const totalSeconds = (first * 3600) + (second * 60) + third;
@@ -386,14 +381,29 @@ function formatRunTime(value, minutesValue = "", secondsValue = "") {
 
   const numeric = Number(raw);
   if (!Number.isNaN(numeric) && numeric > 0 && numeric < 1) {
-    if (fromMinSec) return fromMinSec;
     const totalSeconds = Math.round(numeric * 24 * 60 * 60);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   }
 
-  return fromMinSec || raw;
+  return raw;
+}
+
+function getCellByIndex(row, index) {
+  return row[index] || "";
+}
+
+function getRunMinutes(row, headers) {
+  return getCell(row, headers, ["2.4km (Min)", "2.4km Min"]) || getCellByIndex(row, 17);
+}
+
+function getRunSeconds(row, headers) {
+  return getCell(row, headers, ["2.4km (Sec)", "2.4km Sec"]) || getCellByIndex(row, 18);
+}
+
+function getRunRounded(row, headers) {
+  return getCell(row, headers, ["2.4km (Rounded Timing)", "2.4km Rounded Time", "2.4km Rounded Timing"]) || getCellByIndex(row, 19);
 }
 
 function buildParticipantsFromCsv(csvText) {
@@ -430,7 +440,7 @@ function buildParticipantsFromCsv(csvText) {
       situpScore: getCell(row, headers, ["Sit-up Score", "Score"]),
       pushup: getCell(row, headers, ["Push-up (Reps)", "Push-up Reps"]),
       pushupScore: getCell(row, headers, ["Push-up Score", "Score_11"]),
-      run: formatRunTime(getCell(row, headers, ["2.4km (Rounded Timing)", "2.4km Rounded Time", "2.4km Rounded Timing"]), getCell(row, headers, ["2.4km (Min)", "2.4km Min"]), getCell(row, headers, ["2.4km (Sec)", "2.4km Sec"])),
+      run: formatRunTime(getRunRounded(row, headers), getRunMinutes(row, headers), getRunSeconds(row, headers)),
       runScore: getCell(row, headers, ["Run Score", "Score_13"]),
       score,
       award: normalizeAward(getCell(row, headers, ["FinalAward", "Final Award"])),
