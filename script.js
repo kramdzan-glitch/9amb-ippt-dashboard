@@ -346,8 +346,12 @@ function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
   const seconds = Number(String(secondsValue || "").trim());
 
   if (!Number.isNaN(minutes) && !Number.isNaN(seconds) && (minutes > 0 || seconds > 0)) {
-    const roundedSeconds = Math.round(seconds / 10) * 10;
-    if (roundedSeconds >= 60) return `${minutes + 1}:00`;
+    const roundedSeconds = Math.ceil(seconds / 10) * 10;
+
+    if (roundedSeconds >= 60) {
+      return `${minutes + 1}:00`;
+    }
+
     return `${minutes}:${String(roundedSeconds).padStart(2, "0")}`;
   }
 
@@ -355,39 +359,66 @@ function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
 }
 
 function formatRunTime(value, minutesValue = "", secondsValue = "") {
-  // For IPPT, the most reliable source is Min + Sec.
-  // This prevents Google Sheets CSV duration values like 00:11 from being mistaken as 0 min 11 sec.
-  const fromMinSec = formatRunTimeFromMinutesSeconds(minutesValue, secondsValue);
-  if (fromMinSec) return fromMinSec;
-
   const raw = String(value || "").trim();
-  if (!raw) return "";
 
+  const minutes = Number(String(minutesValue || "").trim());
+  const seconds = Number(String(secondsValue || "").trim());
+  const hasMinSec = !Number.isNaN(minutes) && !Number.isNaN(seconds) && (minutes > 0 || seconds > 0);
+  const fromMinSec = formatRunTimeFromMinutesSeconds(minutesValue, secondsValue);
+
+  // Google Sheets may export a duration like 00:12 or 0:12.
+  // For IPPT this means 12 minutes 00 seconds, not 0 min 12 sec.
   const timeMatch = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (timeMatch) {
     const first = Number(timeMatch[1]);
     const second = Number(timeMatch[2]);
     const third = timeMatch[3] !== undefined ? Number(timeMatch[3]) : null;
 
+    // hh:mm:ss format
     if (third !== null) {
       const totalSeconds = (first * 3600) + (second * 60) + third;
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+      const displayMinutes = Math.floor(totalSeconds / 60);
+      const displaySeconds = totalSeconds % 60;
+      return `${displayMinutes}:${String(displaySeconds).padStart(2, "0")}`;
     }
 
+    // If exported as 0:12, interpret as 12:00 unless Min/Sec clearly gives a more precise same-minute timing.
+    if (first === 0) {
+      if (hasMinSec) {
+        // Example: Min 11 Sec 09 and exported 0:11 -> should be 11:10.
+        if (second === minutes && seconds > 0 && seconds < 50) {
+          return fromMinSec;
+        }
+
+        // Example: Min 11 Sec 50 and exported 0:12 -> should be 12:00.
+        if (second === minutes + 1) {
+          return `${second}:00`;
+        }
+      }
+
+      return `${second}:00`;
+    }
+
+    // Already correct, e.g. 11:10.
     return `${first}:${String(second).padStart(2, "0")}`;
   }
 
+  // Google Sheets may export duration as a day fraction.
   const numeric = Number(raw);
   if (!Number.isNaN(numeric) && numeric > 0 && numeric < 1) {
     const totalSeconds = Math.round(numeric * 24 * 60 * 60);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    const displayMinutes = Math.floor(totalSeconds / 60);
+    const displaySeconds = totalSeconds % 60;
+
+    // If it resolves to a whole minute, show m:00.
+    if (displaySeconds === 0) {
+      return `${displayMinutes}:00`;
+    }
+
+    return `${displayMinutes}:${String(displaySeconds).padStart(2, "0")}`;
   }
 
-  return raw;
+  return fromMinSec || raw || "";
 }
 
 function getCellByIndex(row, index) {
