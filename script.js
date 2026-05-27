@@ -333,15 +333,46 @@ function getCell(row, headers, possibleNames) {
   return "";
 }
 
-function formatRunTime(value) {
+function normalizeAward(value) {
+  const award = String(value || "").trim();
+  if (!award) return "Did Not Attempt";
+  if (award.toLowerCase() === "dna") return "Did Not Attempt";
+  return award;
+}
+
+
+function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
+  const minutes = Number(String(minutesValue || "").trim());
+  const seconds = Number(String(secondsValue || "").trim());
+
+  if (!Number.isNaN(minutes) && !Number.isNaN(seconds) && (minutes > 0 || seconds > 0)) {
+    const roundedSeconds = Math.round(seconds / 10) * 10;
+
+    if (roundedSeconds >= 60) {
+      return `${minutes + 1}:00`;
+    }
+
+    return `${minutes}:${String(roundedSeconds).padStart(2, "0")}`;
+  }
+
+  return "";
+}
+
+function formatRunTime(value, minutesValue = "", secondsValue = "") {
+  const fromMinSec = formatRunTimeFromMinutesSeconds(minutesValue, secondsValue);
   const raw = String(value || "").trim();
-  if (!raw) return "";
+
+  if (!raw) return fromMinSec;
 
   const timeMatch = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
   if (timeMatch) {
     const first = Number(timeMatch[1]);
     const second = Number(timeMatch[2]);
     const third = timeMatch[3] !== undefined ? Number(timeMatch[3]) : null;
+
+    if (first === 0 && fromMinSec && fromMinSec !== "0:00") {
+      return fromMinSec;
+    }
 
     if (third !== null) {
       const totalSeconds = (first * 3600) + (second * 60) + third;
@@ -355,25 +386,14 @@ function formatRunTime(value) {
 
   const numeric = Number(raw);
   if (!Number.isNaN(numeric) && numeric > 0 && numeric < 1) {
+    if (fromMinSec) return fromMinSec;
     const totalSeconds = Math.round(numeric * 24 * 60 * 60);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, "0")}`;
   }
 
-  const embeddedTime = raw.match(/(\d{1,2}:\d{2}(?::\d{2})?)/);
-  if (embeddedTime) {
-    return formatRunTime(embeddedTime[1]);
-  }
-
-  return raw;
-}
-
-function normalizeAward(value) {
-  const award = String(value || "").trim();
-  if (!award) return "Did Not Attempt";
-  if (award.toLowerCase() === "dna") return "Did Not Attempt";
-  return award;
+  return fromMinSec || raw;
 }
 
 function buildParticipantsFromCsv(csvText) {
@@ -410,7 +430,7 @@ function buildParticipantsFromCsv(csvText) {
       situpScore: getCell(row, headers, ["Sit-up Score", "Score"]),
       pushup: getCell(row, headers, ["Push-up (Reps)", "Push-up Reps"]),
       pushupScore: getCell(row, headers, ["Push-up Score", "Score_11"]),
-      run: formatRunTime(getCell(row, headers, ["2.4km (Rounded Timing)", "2.4km Rounded Time", "2.4km Rounded Timing"])),
+      run: formatRunTime(getCell(row, headers, ["2.4km (Rounded Timing)", "2.4km Rounded Time", "2.4km Rounded Timing"]), getCell(row, headers, ["2.4km (Min)", "2.4km Min"]), getCell(row, headers, ["2.4km (Sec)", "2.4km Sec"])),
       runScore: getCell(row, headers, ["Run Score", "Score_13"]),
       score,
       award: normalizeAward(getCell(row, headers, ["FinalAward", "Final Award"])),
