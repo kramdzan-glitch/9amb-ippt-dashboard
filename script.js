@@ -301,7 +301,7 @@ async function loadFromAppsScript() {
   const config = window.GOOGLE_SHEET_CONFIG || {};
   if (!config.enabled || !config.apiUrl) return false;
 
-  const response = await fetch(config.apiUrl + "?v=" + Date.now(), { cache: "no-store" });
+  const response = await fetch(config.apiUrl + "?fresh=" + Date.now(), { cache: "no-store" });
   if (!response.ok) throw new Error("Apps Script API could not be loaded.");
 
   const json = await response.json();
