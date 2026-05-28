@@ -309,8 +309,11 @@ async function loadFromAppsScript() {
 
   if (!participants.length) throw new Error("No participants received from Apps Script API.");
 
-  data = participants;
-  depots = json.depots || buildDepots(participants);
+  data.length = 0;
+  data.push(...participants);
+
+  depots.length = 0;
+depots.push(...(json.depots || buildDepots(participants)));
   return true;
 }
 
