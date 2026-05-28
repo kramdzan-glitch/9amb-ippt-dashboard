@@ -341,6 +341,34 @@ function normalizeAward(value) {
 }
 
 
+
+function formatRoundedTimingDirect(value) {
+  const raw = String(value || "").trim();
+  if (!raw || raw === "00:00" || raw === "0:00" || raw === "00:00:00") return "";
+
+  const match = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (match) {
+    const first = Number(match[1]);
+    const second = Number(match[2]);
+    const third = match[3] !== undefined ? Number(match[3]) : null;
+
+    if (third === null && first === 0) {
+      return `${second}:00`;
+    }
+
+    if (third !== null) {
+      const totalSeconds = (first * 3600) + (second * 60) + third;
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    return `${first}:${String(second).padStart(2, "0")}`;
+  }
+
+  return raw;
+}
+
 function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
   const minutesRaw = String(minutesValue ?? "").trim();
   const secondsRaw = String(secondsValue ?? "").trim();
@@ -479,7 +507,7 @@ function buildParticipantsFromCsv(csvText) {
       situpScore: getCell(row, headers, ["Sit-up Score", "Score"]),
       pushup: getCell(row, headers, ["Push-up (Reps)", "Push-up Reps"]),
       pushupScore: getCell(row, headers, ["Push-up Score", "Score_11"]),
-      run: formatRunTime(getRunRounded(row, headers), getRunMinutes(row, headers), getRunSeconds(row, headers)),
+      run: formatRoundedTimingDirect(getRunRounded(row, headers)) || formatRunTime("", getRunMinutes(row, headers), getRunSeconds(row, headers)),
       runScore: getCell(row, headers, ["Run Score", "Score_13"]),
       score,
       award: normalizeAward(getCell(row, headers, ["FinalAward", "Final Award"])),
@@ -487,7 +515,7 @@ function buildParticipantsFromCsv(csvText) {
     });
   }
 
-  console.log("IPPT timing debug", debugTiming.slice(0, 20));
+  console.log("IPPT timing debug v17", debugTiming.slice(0, 20));
   return participants;
 }
 
