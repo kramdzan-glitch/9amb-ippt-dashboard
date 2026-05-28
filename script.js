@@ -301,19 +301,22 @@ async function loadFromAppsScript() {
   const config = window.GOOGLE_SHEET_CONFIG || {};
   if (!config.enabled || !config.apiUrl) return false;
 
-  const response = await fetch(config.apiUrl + "?fresh=" + Date.now(), { cache: "no-store" });
+  const response = await fetch(config.apiUrl + "?fresh=" + Date.now(), {
+    cache: "reload"
+  });
+
   if (!response.ok) throw new Error("Apps Script API could not be loaded.");
 
   const json = await response.json();
-  const participants = json.participants || [];
-
-  if (!participants.length) throw new Error("No participants received from Apps Script API.");
 
   data.length = 0;
-  data.push(...participants);
+  data.push(...json.participants);
 
   depots.length = 0;
-depots.push(...(json.depots || buildDepots(participants)));
+  depots.push(...(json.depots || buildDepots(json.participants)));
+
+  console.log("Loaded from API:", data.find(p => p.tag === "007").run);
+
   return true;
 }
 
