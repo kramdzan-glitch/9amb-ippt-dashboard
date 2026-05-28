@@ -353,7 +353,7 @@ function formatRoundedTimingDirect(value) {
     const third = match[3] !== undefined ? Number(match[3]) : null;
 
     if (third === null && first === 0) {
-      return `${second}:00`;
+      return `0:${String(second).padStart(2, "0")}`;
     }
 
     if (third !== null) {
