@@ -1,18 +1,12 @@
-// 9AMB IPPT SCORING DASHBOARD - Google Sheet Live Configuration
-// IMPORTANT:
-// 1. In Google Sheets, go to File > Share > Publish to web.
-// 2. Publish the "IPPT Entry" tab as CSV.
-// 3. Copy the gid number from the IPPT Entry tab URL and paste it below.
+// 9AMB IPPT SCORING DASHBOARD - Version 19 API Config
+// Paste your Google Apps Script Web App URL below after deployment.
 
 const GOOGLE_SHEET_CONFIG = {
-  enabled: true,
+  enabled: false,
 
-  // Your Google Sheet ID
-  sheetId: "1XUgKydizhHc_pnSUVrPQpfYV_igef-uXJgpORoB4c18",
+  // Paste your Apps Script Web App URL here.
+  apiUrl: "",
 
-  // Replace this with the actual gid of the IPPT Entry tab if different.
-  gid: "1764518998",
-
-  // Fallback to data.json if Google Sheet cannot be loaded.
+  // Fallback to data.json if the API is not ready.
   useLocalFallback: true
 };
