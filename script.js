@@ -460,11 +460,11 @@ function getIpptRunRounded(row, headers) {
 }
 
 function getRunMinutes(row, headers) {
-  return getIpptRunMin(row, headers);
+  return row[16];
 }
 
 function getRunSeconds(row, headers) {
-  return getIpptRunSec(row, headers);
+  return row[17];
 }
 
 function getRunRounded(row, headers) {
