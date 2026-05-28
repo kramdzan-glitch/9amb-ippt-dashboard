@@ -1,4 +1,4 @@
-const CACHE_NAME = "9amb-ippt-dashboard-v16-exact-ippt-timing";
+const CACHE_NAME = "9amb-ippt-dashboard-v17-rounded-timing-direct";
 
 const APP_FILES = [
   "./",
