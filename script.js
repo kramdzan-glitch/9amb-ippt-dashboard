@@ -305,13 +305,7 @@ async function loadFromAppsScript() {
 
   const apiUrl = config.apiUrl + "?fresh=" + Date.now() + "&rand=" + Math.random();
 
-  const response = await fetch(apiUrl, {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      "Cache-Control": "no-cache"
-    }
-  });
+const response = await fetch(apiUrl);
 
   if (!response.ok) {
     throw new Error("Apps Script API could not be loaded. HTTP " + response.status);
