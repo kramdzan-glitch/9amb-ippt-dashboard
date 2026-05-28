@@ -353,7 +353,7 @@ function formatRoundedTimingDirect(value) {
     const third = match[3] !== undefined ? Number(match[3]) : null;
 
     if (third === null && first === 0) {
-      return `0:${String(second).padStart(2, "0")}`;
+      return `${second}:00`;
     }
 
     if (third !== null) {
@@ -507,7 +507,7 @@ function buildParticipantsFromCsv(csvText) {
       situpScore: getCell(row, headers, ["Sit-up Score", "Score"]),
       pushup: getCell(row, headers, ["Push-up (Reps)", "Push-up Reps"]),
       pushupScore: getCell(row, headers, ["Push-up Score", "Score_11"]),
-      run: formatRoundedTimingDirect(getRunRounded(row, headers)) || formatRunTime("", getRunMinutes(row, headers), getRunSeconds(row, headers)),
+      run: formatRunTime("", getRunMinutes(row, headers), getRunSeconds(row, headers)),
       runScore: getCell(row, headers, ["Run Score", "Score_13"]),
       score,
       award: normalizeAward(getCell(row, headers, ["FinalAward", "Final Award"])),
@@ -515,7 +515,7 @@ function buildParticipantsFromCsv(csvText) {
     });
   }
 
-  console.log("IPPT timing debug v17", debugTiming.slice(0, 20));
+  console.log("IPPT timing debug v18", debugTiming.slice(0, 20));
   return participants;
 }
 
@@ -586,6 +586,32 @@ async function loadData() {
   }
 
   showHome();
+}
+
+
+// VERSION 18 FINAL OVERRIDE: Use 2.4km Min + Sec only.
+function getRunMinutes(row, headers) {
+  return row[16] || getCell(row, headers, ["2.4km (Min)", "2.4km Min"]);
+}
+
+function getRunSeconds(row, headers) {
+  return row[17] || getCell(row, headers, ["2.4km (Sec)", "2.4km Sec"]);
+}
+
+function formatRunTimeFromMinutesSeconds(minutesValue, secondsValue) {
+  const minutes = Number(String(minutesValue ?? "").trim());
+  const seconds = Number(String(secondsValue ?? "").trim());
+
+  if (Number.isNaN(minutes) || Number.isNaN(seconds)) return "";
+  if (minutes <= 0 && seconds <= 0) return "0:00";
+
+  const roundedSeconds = Math.ceil(seconds / 10) * 10;
+  if (roundedSeconds >= 60) return `${minutes + 1}:00`;
+  return `${minutes}:${String(roundedSeconds).padStart(2, "0")}`;
+}
+
+function formatRunTime(value, minutesValue = "", secondsValue = "") {
+  return formatRunTimeFromMinutesSeconds(minutesValue, secondsValue);
 }
 
 loadData();
