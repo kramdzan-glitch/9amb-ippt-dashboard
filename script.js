@@ -279,7 +279,7 @@ function showScorecard(tag) {
 }
 
 // -----------------------------
-// Google Apps Script API live-data section
+// Version 20: Google Apps Script API only, no stale fallback
 // -----------------------------
 
 function buildDepots(participants) {
@@ -299,53 +299,50 @@ function buildDepots(participants) {
 
 async function loadFromAppsScript() {
   const config = window.GOOGLE_SHEET_CONFIG || {};
-  if (!config.enabled || !config.apiUrl) return false;
+  if (!config.enabled || !config.apiUrl) {
+    throw new Error("Apps Script API is not enabled in config.js");
+  }
 
-  const response = await fetch(config.apiUrl + "?fresh=" + Date.now(), {
-    cache: "reload"
+  const apiUrl = config.apiUrl + "?fresh=" + Date.now() + "&rand=" + Math.random();
+
+  const response = await fetch(apiUrl, {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache"
+    }
   });
 
-  if (!response.ok) throw new Error("Apps Script API could not be loaded.");
+  if (!response.ok) {
+    throw new Error("Apps Script API could not be loaded. HTTP " + response.status);
+  }
 
   const json = await response.json();
 
-  data.length = 0;
-  data.push(...json.participants);
+  if (!json.participants || !json.participants.length) {
+    throw new Error("No participants received from Apps Script API.");
+  }
 
-  depots.length = 0;
-  depots.push(...(json.depots || buildDepots(json.participants)));
+  data = json.participants;
+  depots = json.depots || buildDepots(data);
 
-  console.log("Loaded from API:", data.find(p => p.tag === "007").run);
-
+  console.log("VERSION 20 API LOADED:", data.find(p => p.tag === "007")?.run);
   return true;
 }
 
 async function loadLocalData() {
-  try {
-    const response = await fetch("data.json", { cache: "no-store" });
-    const json = await response.json();
-    data = json.participants || [];
-    depots = json.depots || buildDepots(data);
-  } catch (error) {
-    data = [];
-    depots = [];
-  }
+  throw new Error("Local fallback disabled in Version 20.");
 }
 
 async function loadData() {
   homeLogo.src = embeddedLogo;
 
   try {
-    const loadedLive = await loadFromAppsScript();
-    if (!loadedLive) await loadLocalData();
+    await loadFromAppsScript();
   } catch (error) {
-    console.warn("Apps Script API failed. Using local fallback.", error);
-    if ((window.GOOGLE_SHEET_CONFIG || {}).useLocalFallback !== false) {
-      await loadLocalData();
-    } else {
-      data = [];
-      depots = [];
-    }
+    console.error("Version 20 API load failed:", error);
+    data = [];
+    depots = [];
   }
 
   showHome();
