@@ -135,7 +135,7 @@ function showOverview() {
         <b>Total Participants Registered</b>
         <span class="count">${data.length}</span>
       </div>
-      <h2 class="section-title">BY DEPOTS</h2>
+      <h2 class="section-title">PARTICIPATING DEPOTS</h2>
       ${depots.map(depot => `
         <div class="summary-row" onclick="showOverviewDepot('${escapeHtml(depot)}')">
           <b>🏢 ${escapeHtml(depot)}</b>
