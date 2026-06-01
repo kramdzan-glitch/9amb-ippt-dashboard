@@ -404,3 +404,30 @@ button {
     height: 92px;
   }
 }
+
+/* Overview / Nominal Roll / Info Card title size */
+.header-title,
+#headerTitle,
+header h1,
+h1 {
+  font-size: 34px !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.5px;
+}
+
+/* Depot names and list text */
+.summary-row b {
+  font-size: 28px !important;
+  font-weight: 900 !important;
+}
+
+/* Numbers on the right */
+.summary-row .count {
+  font-size: 38px !important;
+  font-weight: 900 !important;
+}
+
+/* Running icon size */
+.circle.bluebg {
+  font-size: 42px !important;
+}
