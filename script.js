@@ -135,7 +135,7 @@ function showOverview() {
       <div class="summary-row">
         <div>
           <b>Total Participants Registered</b>
-          <span class="count">${data.length}</span>
+         <span class="count total-main">${data.length}</span>
         </div>
         <div class="circle bluebg">🏃</div>
       </div>
