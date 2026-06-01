@@ -437,3 +437,27 @@ h1 {
 .circle.bluebg {
   font-size: 42px !important;
 }
+
+/* Put total number below the label */
+.summary-row > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Total 64 style */
+.total-main {
+  display: block;
+  font-size: 52px !important;
+  font-weight: 500 !important;
+  color: #0b57ff;
+  line-height: 1;
+}
+
+/* Depot count numbers unbold */
+.summary-row > span .count,
+.summary-row .count:not(.total-main) {
+  font-weight: 400 !important;
+  color: #001a3d;
+}
