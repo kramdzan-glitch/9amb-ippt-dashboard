@@ -423,14 +423,14 @@ h1 {
 
 /* Depot names */
 .summary-row > b {
-  font-size: 30px !important;
-  font-weight: 600 !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
 }
 
 /* Numbers */
 .summary-row .count {
-  font-size: 34px !important;
-  font-weight: 500 !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
 }
 
 /* Running icon size */
