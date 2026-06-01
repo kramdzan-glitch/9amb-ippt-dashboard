@@ -149,7 +149,7 @@ function showOverview() {
     </div>
   `;
 
-  showPage("PARTICIPATING DEPOTS", summary, "overview");
+  showPage("PARTICIPATING DEPOTS", "overview");
 }
 
 function showOverviewDepot(depot) {
