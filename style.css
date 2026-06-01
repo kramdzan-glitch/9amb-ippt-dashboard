@@ -405,7 +405,7 @@ button {
   }
 }
 
-/* Overview / Nominal Roll / Info Card title size */
+/* Page title size */
 .header-title,
 #headerTitle,
 header h1,
@@ -415,10 +415,16 @@ h1 {
   letter-spacing: -0.5px;
 }
 
-/* Depot names and list text */
-.summary-row b {
-  font-size: 28px !important;
-  font-weight: 900 !important;
+/* Total Participants text */
+.summary-row > div > b {
+  font-size: 26px !important;
+  font-weight: 600 !important;
+}
+
+/* Depot names - not too bold */
+.summary-row > b {
+  font-size: 30px !important;
+  font-weight: 500 !important;
 }
 
 /* Numbers on the right */
