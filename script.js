@@ -128,15 +128,19 @@ function participantRows(list, showPoints = false) {
 }
 
 function showOverview() {
+  const participatingDepots = ["Bn HQ", "91FMD", "92FMD", "93FMD", "Attached In"];
+
   const summary = `
     <div class="panel">
-      <h2>OVERVIEW</h2>
       <div class="summary-row">
-        <b>Total Participants Registered</b>
-        <span class="count">${data.length}</span>
+        <div>
+          <b>Total Participants Registered</b>
+          <span class="count">${data.length}</span>
+        </div>
+        <div class="circle bluebg">🏃</div>
       </div>
-      <h2 class="section-title">PARTICIPATING DEPOTS</h2>
-      ${depots.map(depot => `
+
+      ${participatingDepots.map(depot => `
         <div class="summary-row" onclick="showOverviewDepot('${escapeHtml(depot)}')">
           <b>🏢 ${escapeHtml(depot)}</b>
           <span><b class="count">${data.filter(person => person.depot === depot).length}</b> <span class="arrow">›</span></span>
@@ -145,7 +149,7 @@ function showOverview() {
     </div>
   `;
 
-  showPage(summary, "OVERVIEW", "overview");
+  showPage("PARTICIPATING DEPOTS", summary, "overview");
 }
 
 function showOverviewDepot(depot) {
